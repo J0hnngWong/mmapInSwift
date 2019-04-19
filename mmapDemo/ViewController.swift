@@ -63,10 +63,13 @@ class ViewController: UIViewController {
         var fileDescriptor: Int32
         //用来储存文件属性？
         var statInfo = stat()
+        //用来储存错误
+        var outError: Int32
         
-        //初始化读取文件内容的指针和长度
+        //初始化读取文件内容的指针和长度和错误类型
         outDataPtr = nil
         outDataLength = 0
+        outError = 0
         
         //openFile 打开文件
         //O_RDWR 是读取文件用来读写，还有其他参数
@@ -76,6 +79,8 @@ class ViewController: UIViewController {
         fileDescriptor = open(inPathName, O_RDWR, 0)
         
         if fileDescriptor < 0 {
+            //打开文件错误放入outError里面
+            outError = errno
             return false
         }
         
@@ -83,6 +88,8 @@ class ViewController: UIViewController {
         //fstat()用来将参数fileDescriptor 所指的文件状态, 复制到参数statInfo 所指的结构中(struct stat). Fstat()与stat()作用完全相同, 不同处在于传入的参数为已打开的文件描述词. 详细内容请参考stat(). 具体参照：https://blog.csdn.net/allenguo123/article/details/41011801
         //成功返回0不成功返回-1
         if fstat(fileDescriptor, &statInfo) != 0 {
+            //赋值文件属性错误，错误信息存入outError里面
+            outError = errno
             return false
         } else {
             //ftruncate()会将参数fileDescriptor 指定的文件大小改为参数statInfo.st_size+4 指定的大小。参数fileDescriptor 为已打开的文件描述词，而且必须是以写入模式打开的文件。如果原来的文件大小比参数statInfo.st_size+4大，则超过的部分会被删去。
@@ -128,6 +135,8 @@ class ViewController: UIViewController {
             */
             outDataPtr = mmap(nil, Int(statInfo.st_size+4), PROT_READ|PROT_WRITE, MAP_FILE|MAP_SHARED, fileDescriptor, 0)
             if outDataPtr == MAP_FAILED {
+                //映射错误失败错误类型存入outError里面
+                outError = errno
                 return false
             } else {
                 outDataLength = size_t(statInfo.st_size)
