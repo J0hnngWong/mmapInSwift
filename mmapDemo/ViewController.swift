@@ -37,7 +37,7 @@ class ViewController: UIViewController {
     func processFile(inPathName: String) {
         //储存文件长度变量
         var dataLength: size_t?
-        //
+        //文件起始指针
         var dataPtr: UnsafeMutableRawPointer?
         //储存读取内存数据起始位置的指针
         var start: UnsafeMutableRawPointer?
@@ -47,7 +47,12 @@ class ViewController: UIViewController {
             print("dataLength : \(String(describing: dataLength))")
             start = dataPtr
             dataPtr = dataPtr! + 3
+            // 参考 http://www.runoob.com/cprogramming/c-function-memcpy.html
+            //dataPtr -- 指向用于存储复制内容的目标数组，类型强制转换为 void* 指针。
+            //"CCCC" -- 指向要复制的数据源，类型强制转换为 void* 指针。
+            //4 -- 要被复制的字节数。
             memcpy(dataPtr, "CCCC", 4)
+            //释放内存空间
             munmap(start, 7)
         }
     }
@@ -148,5 +153,9 @@ class ViewController: UIViewController {
         return true
     }
 
+    @IBAction func actSecondExample(_ sender: Any) {
+        let secondExample = mmapRWTest.init()
+        secondExample.fileMapping()
+    }
 }
 
